@@ -1,26 +1,26 @@
 import sha1 from 'sha1';
-import Queue from 'bull/lib/queue';
 import dbClient from '../utils/db';
+import Queue from 'bull/lib/queue';
 
 const userQueue = new Queue('email sending');
 
 export default class UsersController {
-  static async postNew(req, res) {
-    const email = req.body ? req.body.email : null;
-    const password = req.body ? req.body.password : null;
+  static async postNew(requests_, responses_) {
+    const email = requests_.body ? requests_.body.email : null;
+    const password = requests_.body ? requests_.body.password : null;
 
     if (!email) {
-      res.status(400).json({ error: 'Missing email' });
+      responses_.status(400).json({ error: 'Missing email' });
       return;
     }
     if (!password) {
-      res.status(400).json({ error: 'Missing password' });
+      responses_.status(400).json({ error: 'Missing password' });
       return;
     }
     const user = await (await dbClient.usersCollection()).findOne({ email });
 
     if (user) {
-      res.status(400).json({ error: 'Already exist' });
+      responses_.status(400).json({ error: 'Already exist' });
       return;
     }
     const insertionInfo = await (await dbClient.usersCollection())
@@ -28,12 +28,12 @@ export default class UsersController {
     const userId = insertionInfo.insertedId.toString();
 
     userQueue.add({ userId });
-    res.status(201).json({ email, id: userId });
+    responses_.status(201).json({ email, id: userId });
   }
 
-  static async getMe(req, res) {
-    const { user } = req;
+  static async getMe(requests_, responses_) {
+    const { user } = requests_;
 
-    res.status(200).json({ email: user.email, id: user._id.toString() });
+    responses_.status(200).json({ email: user.email, id: user._id.toString() });
   }
 }
