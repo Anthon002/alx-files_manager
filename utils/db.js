@@ -1,14 +1,13 @@
 import mongodb from 'mongodb';
-// eslint-disable-next-line no-unused-vars
 import Collection from 'mongodb/lib/collection';
 import envLoader from './env_loader';
 
 /**
- * Represents a MongoDB client.
+ * Defines a client for interacting with MongoDB.
  */
 class DBClient {
   /**
-   * Creates a new DBClient instance.
+   * Initializes a new instance of DBClient.
    */
   constructor() {
     envLoader();
@@ -22,7 +21,7 @@ class DBClient {
   }
 
   /**
-   * Checks if this client's connection to the MongoDB server is active.
+   * Determines whether the connection to the MongoDB server is active.
    * @returns {boolean}
    */
   isAlive() {
@@ -30,7 +29,7 @@ class DBClient {
   }
 
   /**
-   * Retrieves the number of users in the database.
+   * Fetches the total count of users in the database.
    * @returns {Promise<Number>}
    */
   async nbUsers() {
@@ -38,7 +37,7 @@ class DBClient {
   }
 
   /**
-   * Retrieves the number of files in the database.
+   * Fetches the total count of files in the database.
    * @returns {Promise<Number>}
    */
   async nbFiles() {
@@ -46,7 +45,7 @@ class DBClient {
   }
 
   /**
-   * Retrieves a reference to the `users` collection.
+   * Gets a reference to the `users` collection.
    * @returns {Promise<Collection>}
    */
   async usersCollection() {
@@ -54,7 +53,7 @@ class DBClient {
   }
 
   /**
-   * Retrieves a reference to the `files` collection.
+   * Gets a reference to the `files` collection.
    * @returns {Promise<Collection>}
    */
   async filesCollection() {
