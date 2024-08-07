@@ -158,15 +158,15 @@ export default class FilesController {
   }
 
   /**
-   * Retrieves files associated with a specific user.
-   * @param {Request} req The Express request object.
-   * @param {Response} res The Express response object.
+   * method to retrieve the files about a user.
+   * @param {Request} request_
+   * @param {Response} response_
    */
-  static async getIndex(req, res) {
-    const { user } = req;
-    const parentId = req.query.parentId || ROOT_FOLDER_ID.toString();
-    const page = /\d+/.test((req.query.page || '').toString())
-      ? Number.parseInt(req.query.page, 10)
+  static async getIndex(request_, response_) {
+    const { user } = request_;
+    const parentId = request_.query.parentId || ROOT_FOLDER_ID.toString();
+    const page = /\d+/.test((request_.query.page || '').toString())
+      ? Number.parseInt(request_.query.page, 10)
       : 0;
     const filesFilter = {
       userId: user._id,
@@ -195,7 +195,7 @@ export default class FilesController {
           },
         },
       ])).toArray();
-    res.status(200).json(files);
+    resonse_.status(200).json(files);
   }
 
   static async putPublish(req, res) {
@@ -257,14 +257,14 @@ export default class FilesController {
   }
 
   /**
-   * Retrieves the content of a file.
-   * @param {Request} req The Express request object.
-   * @param {Response} res The Express response object.
+   * method to retrieve the  file contents
+   * @param {Request}  request_ request object.
+   * @param {Response} response_ response object.
    */
-  static async getFile(req, res) {
-    const user = await getUserFromXToken(req);
-    const { id } = req.params;
-    const size = req.query.size || null;
+  static async getFile(request_, response_) {
+    const user = await getUserFromXToken(request_);
+    const { id } = request_.params;
+    const size = request_.query.size || null;
     const userId = user ? user._id.toString() : '';
     const fileFilter = {
       _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
@@ -273,29 +273,29 @@ export default class FilesController {
       .findOne(fileFilter);
 
     if (!file || (!file.isPublic && (file.userId.toString() !== userId))) {
-      res.status(404).json({ error: 'Not found' });
+      response_.status(404).json({ error: 'Not found' });
       return;
     }
     if (file.type === VALID_FILE_TYPES.folder) {
-      res.status(400).json({ error: 'A folder doesn\'t have content' });
+      response_.status(400).json({ error: 'A folder doesn\'t have content' });
       return;
     }
-    let filePath = file.localPath;
+    let fileLocation = file.localPath;
     if (size) {
-      filePath = `${file.localPath}_${size}`;
+      fileLocation = `${file.localPath}_${size}`;
     }
-    if (existsSync(filePath)) {
-      const fileInfo = await statAsync(filePath);
+    if (existsSync(fileLocation)) {
+      const fileInfo = await statAsync(fileLocation);
       if (!fileInfo.isFile()) {
-        res.status(404).json({ error: 'Not found' });
+        response_.status(404).json({ error: 'Not found' });
         return;
       }
     } else {
-      res.status(404).json({ error: 'Not found' });
+      response_.status(404).json({ error: 'Not found' });
       return;
     }
-    const absoluteFilePath = await realpathAsync(filePath);
-    res.setHeader('Content-Type', contentType(file.name) || 'text/plain; charset=utf-8');
-    res.status(200).sendFile(absoluteFilePath);
+    const absolutefileLocation = await realpathAsync(fileLocation);
+    response_.setHeader('Content-Type', contentType(file.name) || 'text/plain; charset=utf-8');
+    response_.status(200).sendFile(absolutefileLocation);
   }
 }
