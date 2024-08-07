@@ -51,28 +51,28 @@ const isValidId = (id) => {
 
 export default class FilesController {
   /**
-   * method for uploading files
-   * @param {Request} request The Express request object.
-   * @param {Response} response The Express response object.
+   * Uploads a file.
+   * @param {Request} req The Express request object.
+   * @param {Response} res The Express response object.
    */
-  static async postUpload(request, response)  {
-    const { user } = request,;
-    const name = request.body ? request.body.name : null;
-    const type = request.body ? request.body.type : null;
-    const parentId = request.body && request.body.parentId ? request.body.parentId : ROOT_FOLDER_ID;
-    const isPublic = request.body && request.body.isPublic ? request.body.isPublic : false;
-    const base64Data = request.body && request.body.data ? request.body.data : '';
+  static async postUpload(req, res) {
+    const { user } = req;
+    const name = req.body ? req.body.name : null;
+    const type = req.body ? req.body.type : null;
+    const parentId = req.body && req.body.parentId ? req.body.parentId : ROOT_FOLDER_ID;
+    const isPublic = req.body && req.body.isPublic ? req.body.isPublic : false;
+    const base64Data = req.body && req.body.data ? req.body.data : '';
 
     if (!name) {
-      response.status(400).json({ error: 'Missing name' });
+      res.status(400).json({ error: 'Missing name' });
       return;
     }
     if (!type || !Object.values(VALID_FILE_TYPES).includes(type)) {
-      response.status(400).json({ error: 'Missing type' });
+      res.status(400).json({ error: 'Missing type' });
       return;
     }
-    if (!request.body.data && type !== VALID_FILE_TYPES.folder) {
-      response.status(400).json({ error: 'Missing data' });
+    if (!req.body.data && type !== VALID_FILE_TYPES.folder) {
+      res.status(400).json({ error: 'Missing data' });
       return;
     }
     if ((parentId !== ROOT_FOLDER_ID) && (parentId !== ROOT_FOLDER_ID.toString())) {
@@ -82,11 +82,11 @@ export default class FilesController {
         });
 
       if (!file) {
-        response.status(400).json({ error: 'Parent not found' });
+        res.status(400).json({ error: 'Parent not found' });
         return;
       }
       if (file.type !== VALID_FILE_TYPES.folder) {
-        response.status(400).json({ error: 'Parent is not a folder' });
+        res.status(400).json({ error: 'Parent is not a folder' });
         return;
       }
     }
@@ -119,7 +119,7 @@ export default class FilesController {
       const jobName = `Image thumbnail [${userId}-${fileId}]`;
       fileQueue.add({ userId, fileId, name: jobName });
     }
-    response.status(201).json({
+    res.status(201).json({
       id: fileId,
       userId,
       name,
@@ -131,9 +131,9 @@ export default class FilesController {
     });
   }
 
-  static async getShow(request, response)  {
-    const { user } = request;
-    const id = request.params ? request.params.id : NULL_ID;
+  static async getShow(req, res) {
+    const { user } = req;
+    const id = req.params ? req.params.id : NULL_ID;
     const userId = user._id.toString();
     const file = await (await dbClient.filesCollection())
       .findOne({
@@ -142,10 +142,10 @@ export default class FilesController {
       });
 
     if (!file) {
-      response.status(404).json({ error: 'Not found' });
+      res.status(404).json({ error: 'Not found' });
       return;
     }
-    response.status(200).json({
+    res.status(200).json({
       id,
       userId,
       name: file.name,
@@ -159,14 +159,14 @@ export default class FilesController {
 
   /**
    * Retrieves files associated with a specific user.
-   * @param {Request} request The Express request object.
-   * @param {Response} response The Express response object.
+   * @param {Request} req The Express request object.
+   * @param {Response} res The Express response object.
    */
-  static async getIndex(request, response)  {
-    const { user } = request;
-    const parentId = request.query.parentId || ROOT_FOLDER_ID.toString();
-    const page = /\d+/.test((request.query.page || '').toString())
-      ? Number.parseInt(request.query.page, 10)
+  static async getIndex(req, res) {
+    const { user } = req;
+    const parentId = req.query.parentId || ROOT_FOLDER_ID.toString();
+    const page = /\d+/.test((req.query.page || '').toString())
+      ? Number.parseInt(req.query.page, 10)
       : 0;
     const filesFilter = {
       userId: user._id,
@@ -195,12 +195,12 @@ export default class FilesController {
           },
         },
       ])).toArray();
-    response.status(200).json(files);
+    res.status(200).json(files);
   }
 
-  static async putPublish(request, response)  {
-    const { user } = request;
-    const { id } = request.params;
+  static async putPublish(req, res) {
+    const { user } = req;
+    const { id } = req.params;
     const userId = user._id.toString();
     const fileFilter = {
       _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
@@ -210,12 +210,12 @@ export default class FilesController {
       .findOne(fileFilter);
 
     if (!file) {
-      response.status(404).json({ error: 'Not found' });
+      res.status(404).json({ error: 'Not found' });
       return;
     }
     await (await dbClient.filesCollection())
       .updateOne(fileFilter, { $set: { isPublic: true } });
-    response.status(200).json({
+    res.status(200).json({
       id,
       userId,
       name: file.name,
@@ -227,9 +227,9 @@ export default class FilesController {
     });
   }
 
-  static async putUnpublish(request, response)  {
-    const { user } = request;
-    const { id } = request.params;
+  static async putUnpublish(req, res) {
+    const { user } = req;
+    const { id } = req.params;
     const userId = user._id.toString();
     const fileFilter = {
       _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
@@ -239,12 +239,12 @@ export default class FilesController {
       .findOne(fileFilter);
 
     if (!file) {
-      response.status(404).json({ error: 'Not found' });
+      res.status(404).json({ error: 'Not found' });
       return;
     }
     await (await dbClient.filesCollection())
       .updateOne(fileFilter, { $set: { isPublic: false } });
-    response.status(200).json({
+    res.status(200).json({
       id,
       userId,
       name: file.name,
@@ -258,13 +258,13 @@ export default class FilesController {
 
   /**
    * Retrieves the content of a file.
-   * @param {Request} request The Express request object.
-   * @param {Response} response The Express response object.
+   * @param {Request} req The Express request object.
+   * @param {Response} res The Express response object.
    */
-  static async getFile(request, response)  {
+  static async getFile(req, res) {
     const user = await getUserFromXToken(req);
-    const { id } = request.params;
-    const size = request.query.size || null;
+    const { id } = req.params;
+    const size = req.query.size || null;
     const userId = user ? user._id.toString() : '';
     const fileFilter = {
       _id: new mongoDBCore.BSON.ObjectId(isValidId(id) ? id : NULL_ID),
@@ -273,29 +273,29 @@ export default class FilesController {
       .findOne(fileFilter);
 
     if (!file || (!file.isPublic && (file.userId.toString() !== userId))) {
-      response.status(404).json({ error: 'Not found' });
+      res.status(404).json({ error: 'Not found' });
       return;
     }
     if (file.type === VALID_FILE_TYPES.folder) {
-      response.status(400).json({ error: 'A folder doesn\'t have content' });
+      res.status(400).json({ error: 'A folder doesn\'t have content' });
       return;
     }
-    let file_location = file.localPath;
+    let filePath = file.localPath;
     if (size) {
-      file_location = `${file.localPath}_${size}`;
+      filePath = `${file.localPath}_${size}`;
     }
-    if (existsSync(file_location)) {
-      const fileInfo = await statAsync(file_location);
+    if (existsSync(filePath)) {
+      const fileInfo = await statAsync(filePath);
       if (!fileInfo.isFile()) {
-        response.status(404).json({ error: 'Not found' });
+        res.status(404).json({ error: 'Not found' });
         return;
       }
     } else {
-      response.status(404).json({ error: 'Not found' });
+      res.status(404).json({ error: 'Not found' });
       return;
     }
-    const absolutefile_location = await realpathAsync(file_location);
-    response.setHeader('Content-Type', contentType(file.name) || 'text/plain; charset=utf-8');
-    response.status(200).sendFile(absolutefile_location);
+    const absoluteFilePath = await realpathAsync(filePath);
+    res.setHeader('Content-Type', contentType(file.name) || 'text/plain; charset=utf-8');
+    res.status(200).sendFile(absoluteFilePath);
   }
 }
