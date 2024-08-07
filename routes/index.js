@@ -1,13 +1,14 @@
+// eslint-disable-next-line no-unused-vars
 import { Express } from 'express';
-import FilesController from '../controllers/FilesController';
 import AppController from '../controllers/AppController';
 import AuthController from '../controllers/AuthController';
 import UsersController from '../controllers/UsersController';
+import FilesController from '../controllers/FilesController';
 import { basicAuthenticate, xTokenAuthenticate } from '../middlewares/auth';
 import { APIError, errorResponse } from '../middlewares/error';
 
 /**
- * module to inject route;
+ * module for injecting routes
  * @param {Express} api
  */
 const injectRoutes = (api) => {
